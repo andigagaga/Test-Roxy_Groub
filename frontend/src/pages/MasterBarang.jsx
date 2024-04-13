@@ -12,6 +12,7 @@ export default function MasterBarang() {
 
   const [editBarang, setEditBarang] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   // function get data
   const handlegetDataBarang = async () => {
@@ -38,6 +39,11 @@ export default function MasterBarang() {
         qty: 0,
         harga: 0,
       });
+
+      setShowSuccessPopup(true);
+      setTimeout(() => {
+        setShowSuccessPopup(false);
+      }, 3000);
     } catch (error) {
       console.log(error);
     }
@@ -63,8 +69,8 @@ export default function MasterBarang() {
       );
 
       setDataBarang((prevData) =>
-        prevData.map((dataBarng) =>
-          dataBarng.id_barang === editBarang ? response.data : dataBarng
+        prevData.map((dataBarang) =>
+          dataBarang.id_barang === editBarang ? response.data : dataBarang
         )
       );
 
@@ -103,16 +109,29 @@ export default function MasterBarang() {
         return;
       }
 
+      const formattedSearchTerm = searchTerm.toLowerCase();
+
       const response = await axios.get(
-        `http://localhost:5000/master_barang/search?nm_barang=${searchTerm}`
+        `http://localhost:5000/master_barang/search?nm_barang=${formattedSearchTerm}`
       );
 
-      setDataBarang(response.data);
+      const filteredData = response.data.filter((data) =>
+        data.nm_barang.toLowerCase().includes(formattedSearchTerm)
+      );
 
-      setSearchTerm(response.data);
+      setDataBarang(filteredData);
+      setSearchTerm(searchTerm);
     } catch (error) {
       console.log(error);
     }
+  };
+
+  // Function to format harga to currency format
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+    }).format(amount);
   };
 
   useEffect(() => {
@@ -121,74 +140,89 @@ export default function MasterBarang() {
 
   return (
     <div className="flex flex-col items-center">
+      {showSuccessPopup && (
+        <div className="bg-green-500 text-white p-2 rounded-md mb-4">
+          Data berhasil dibuat!
+        </div>
+      )}
       <div className="w-full md:max-w-3xl p-6 bg-white rounded-lg mb-4">
         <h1 className="text-2xl font-bold mb-4">Master Barang</h1>
-        <div className="mb-4 flex items-center">
-          <label className="block text-sm font-bold mb-2 mr-2">Search:</label>
-          <input
-            className="w-full p-2 border rounded-md"
-            type="text"
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              handleSearchDataBarang(e.target.value);
-            }}
-          />
-        </div>
-        <div className="mb-4 flex items-center">
-          <div className="mr-4 flex">
-            <label className="block text-sm font-bold mb-2 mr-2">
-              Id Barang:
-            </label>
-            <input
-              className="w-full p-2 border rounded-md"
-              type="text"
-              value={newDataBarang.id_barang}
-              onChange={(e) =>
-                setNewDataBarng({ ...newDataBarang, id_barang: e.target.value })
-              }
-            />
-          </div>
-          <div className="flex items-center">
-            <label className="block text-sm font-bold mb-2 mr-2">Harga:</label>
-            <input
-              className="w-full p-2 border rounded-md"
-              type="text"
-              value={newDataBarang.harga}
-              onChange={(e) =>
-                setNewDataBarng({ ...newDataBarang, harga: e.target.value })
-              }
-            />
-          </div>
-        </div>
-        <div className="mb-4 flex items-center">
-          <div className="mr-4 flex">
-            <label className="block text-sm font-bold mb-2 mr-2">
-              Nama Barang:
-            </label>
-            <input
-              className="w-full p-2 border rounded-md"
-              type="text"
-              value={newDataBarang.nm_barang}
-              onChange={(e) =>
-                setNewDataBarng({ ...newDataBarang, nm_barang: e.target.value })
-              }
-            />
-          </div>
-          <div className="flex items-center">
-            <label className="block text-sm font-bold mb-2 mr-2">Qty:</label>
-            <input
-              className="w-full p-2 border rounded-md"
-              type="text"
-              value={newDataBarang.qty}
-              onChange={(e) =>
-                setNewDataBarng({ ...newDataBarang, qty: e.target.value })
-              }
-            />
-          </div>
-        </div>
         <div>
+          <div className="mb-4 flex items-center">
+            <label className="block text-sm font-bold mb-2 mr-2">Search:</label>
+            <input
+              className="w-full p-2 border rounded-md"
+              type="text"
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                handleSearchDataBarang(e.target.value);
+              }}
+            />
+          </div>
+          <div className="mb-4 flex items-center">
+            <div className="mr-4 flex">
+              <label className="block text-sm font-bold mb-2 mr-2">
+                Id Barang:
+              </label>
+              <input
+                className="w-full p-2 border rounded-md"
+                type="text"
+                value={newDataBarang.id_barang}
+                onChange={(e) =>
+                  setNewDataBarng({
+                    ...newDataBarang,
+                    id_barang: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div className="flex items-center">
+              <label className="block text-sm font-bold mb-2 mr-2">
+                Harga:
+              </label>
+              <input
+                className="w-full p-2 border rounded-md"
+                type="text"
+                value={newDataBarang.harga}
+                onChange={(e) =>
+                  setNewDataBarng({ ...newDataBarang, harga: e.target.value })
+                }
+              />
+            </div>
+          </div>
+          <div className="mb-4 flex items-center">
+            <div className="mr-4 flex">
+              <label className="block text-sm font-bold mb-2 mr-2">
+                Nama Barang:
+              </label>
+              <input
+                className="w-full p-2 border rounded-md"
+                type="text"
+                value={newDataBarang.nm_barang}
+                onChange={(e) =>
+                  setNewDataBarng({
+                    ...newDataBarang,
+                    nm_barang: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div className="flex items-center">
+              <label className="block text-sm font-bold mb-2 mr-2 ">Qty:</label>
+              <input
+                className="w-full p-2 border rounded-md"
+                type="text"
+                value={newDataBarang.qty}
+                onChange={(e) =>
+                  setNewDataBarng({ ...newDataBarang, qty: e.target.value })
+                }
+              />
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end">
           <button
-            className="border-2 p-1 bg-red-500 text-white font-bold"
+            className="border-2 p-1 bg-red-500 text-white font-bold mr-2"
             onClick={handleCreateDataBarang}
           >
             Add
@@ -222,7 +256,7 @@ export default function MasterBarang() {
                 <tr className="text-center" key={data.id_barang}>
                   <td className="border px-4">{data.id_barang}</td>
                   <td className="border px-4">{data.nm_barang}</td>
-                  <td className="border px-4">{data.harga}</td>
+                  <td className="border px-4">{formatCurrency(data.harga)}</td>
                   <td className="border px-4">{data.qty}</td>
                   <td className="border px-4 flex">
                     <button
